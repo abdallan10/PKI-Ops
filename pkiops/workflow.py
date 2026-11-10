@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from cryptography import x509
 
 from .core import validate_csr
 from .llm import OllamaAdvisor
@@ -43,8 +44,8 @@ class AdvisoryWorkflow:
         names = csr.subject.rfc4514_string()
         try:
             dns = csr.extensions.get_extension_for_class(
-                __import__("cryptography").x509.SubjectAlternativeName
-            ).value.get_values_for_type(__import__("cryptography").x509.DNSName)
+                x509.SubjectAlternativeName
+            ).value.get_values_for_type(x509.DNSName)
             name = dns[0] if len(dns) == 1 else names
         except Exception:
             name = names
