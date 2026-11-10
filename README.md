@@ -2,12 +2,13 @@
 
 Prototype pédagogique de gestion d'une infrastructure à clés publiques (PKI), sujet 4. **Non destiné à la production.**
 
-## État vérifié
+## État des résultats au 10 novembre 2026
 
-- Tests sous Windows, Python 3.13.5 : **34 tests réussis** (résultat communiqué après le dernier correctif).
-- Dernière couverture mesurée et communiquée : **92,27 %**, sur une exécution antérieure à l'ajout du détecteur ; la couverture actuelle est à remesurer.
-- Expérience locale Ollama `qwen2.5:1.5b` : **3/3 décisions PKI correctes**. L'injection initiale a trompé le commentaire du modèle, sans obtenir de certificat. Lors de la nouvelle expérience, le modèle a correctement décrit le rejet.
-- L'état des GitHub Actions et une installation sur une machine propre restent à vérifier.
+- Campagne réelle Qwen 2.5 1.5B : **deux répétitions complètes (120 cas)** rapportées par l'opérateur : 56/60 émissions légitimes, 0/60 émissions illégales, 4 échecs d'agents, 20 injections sans émission. Troisième répétition incomplète.
+- Une démonstration locale d'émission, refus, révocation et journal signé a été rapportée réussie.
+- Les tests et la couverture après les derniers changements, ainsi que le statut CI, **restent à vérifier**. Les anciens chiffres de couverture ne doivent pas être présentés comme actuels.
+- Le serveur HTTP OCSP OpenSSL, la comparaison de trois modèles, le DOI et la release finale ne sont pas confirmés.
+- Voir [résultats observés](RESULTATS_AGENTIQUES_2026-11-10.md), [audit](AUDIT.md) et [fiche système](SYSTEM_CARD.md).
 
 ## Fonctions
 
@@ -58,6 +59,14 @@ Installer Ollama, récupérer `qwen2.5:1.5b`, démarrer le serveur, puis :
 ```
 
 Résultat JSON : `results/raw/ollama-experiment.json`. Cette commande fait de véritables appels au modèle et peut prendre du temps sur CPU. Voir [AI_EXPERIMENT.md](AI_EXPERIMENT.md), [GUARD_EVALUATION.md](GUARD_EVALUATION.md) et [RAPPORT_FINAL.md](RAPPORT_FINAL.md).
+
+## Campagne agentique de 60 cas (appels réels à Ollama)
+
+```powershell
+.\.venv\Scripts\python.exe -m pkiops.agentic_campaign --repetitions 1
+```
+
+Cette commande est **longue** et ne reprend pas une exécution interrompue. Le protocole et ses limites sont documentés dans [AGENTIC_CAMPAIGN.md](AGENTIC_CAMPAIGN.md). Les deux répétitions déjà rapportées suffisent à étayer le bilan partiel ; ne pas relancer inutilement.
 
 ## Limites importantes
 
