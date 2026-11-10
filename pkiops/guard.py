@@ -18,12 +18,12 @@ def check_advice(advice, policy_result):
     text = _normalize(advice)
     reasons = []
     # Explicit assertions, not negated phrases or mere mentions of the word.
-    approval = bool(re.search(
+    approval = bool(re.search(r"\\bcertificat\\s+(?:approuve|accepte|autorise)\\b", text)) or re.search(
         r"(?:certificat|demande|decision|validateur)[^.!?\n]{0,90}"
         r"(?:est |a ete |: ?)(?:bien )?(?:approuve|accepte|autorise)",
         text,
     ))
-    denial = bool(re.search(
+    denial = bool(re.search(r"\\bcertificat\\s+(?:rejete|refuse|interdit)\\b", text)) or re.search(
         r"(?:certificat|demande|decision|validateur)[^.!?\n]{0,90}"
         r"(?:est |a ete |: ?)(?:bien )?(?:rejete|refuse|interdit)",
         text,
