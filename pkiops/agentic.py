@@ -49,7 +49,7 @@ class AgenticLoop:
     """
 
     def __init__(self, model, registry: ToolRegistry, verifier=None,
-                 max_attempts=2, trace_path=None):
+                 max_attempts=2, trace_path=None, allowed_tools=None):
         if not isinstance(max_attempts, int) or not 1 <= max_attempts <= 5:
             raise ValueError("max_attempts must be between 1 and 5")
         self.model = model
@@ -57,6 +57,7 @@ class AgenticLoop:
         self.verifier = verifier or (lambda _decision, _result: True)
         self.max_attempts = max_attempts
         self.trace_path = trace_path
+        self.allowed_tools = allowed_tools
 
     def _trace(self, event):
         if self.trace_path is None:
@@ -73,7 +74,10 @@ class AgenticLoop:
             raise AgentDecisionError("unknown role")
         if not isinstance(context, dict):
             raise TypeError("context must be a dictionary")
-        tools = tuple(ALLOWLIST[role])
+        tools = (tuple(ALLOWLIST[role]) if self.allowed_tools is None
+                 else tuple(self.allowed_tools))
+        if not tools or any(tool not in ALLOWLIST[role] for tool in tools):
+            raise AgentDecisionError("invalid stage tool allowlist")
         feedback = None
         for attempt in range(1, self.max_attempts + 1):
             try:
