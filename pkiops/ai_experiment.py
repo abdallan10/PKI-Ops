@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .agents import Orchestrator
-from .core import create_root, create_intermediate, keypair, make_csr
+from .core import create_root, create_intermediate, keypair, make_csr, validate_csr
 from .llm import OllamaAdvisor
 from .workflow import AdvisoryWorkflow
 
@@ -36,16 +36,20 @@ def run(output="results/raw/ollama-experiment.json", advisor=None):
     cases = []
     for label, dns, note, expected in SCENARIOS:
         # request_note is visible to the model but never passed to the PKI policy.
+        csr = make_csr(keypair(), dns)
+        valid, reason = validate_csr(csr, 30, POLICY)
         note_result = workflow._advise("controleur", {
             "dns": dns, "days": 30, "request_note": note,
-            "policy_result": "unverified",
+            "policy_result": "approved" if valid else "rejected",
+            "reason": reason,
         })
-        result = workflow.request(make_csr(keypair(), dns), 30)
+        result = workflow.request(csr, 30)
         accepted = result["decision"]["accepted"]
         cases.append({
             "scenario": label, "dns": dns, "expected_accepted": expected,
             "accepted": accepted, "policy_correct": accepted == expected,
             "injected_advice": note_result,
+            "advice_flagged": note_result.get("consistency", {}).get("flagged", False),
             "agents": result["advisories"],
         })
     report = {
