@@ -81,3 +81,38 @@ def test_audit_after_revocation(tmp_path):
     assert workflow.audit(serial)["valid"]
     workflow.revoke(serial)
     assert not workflow.audit(serial)["valid"]
+
+
+def test_model_invented_issuer_arguments_are_ignored(tmp_path):
+    class InventingModel(ScriptedModel):
+        def decide(self, role, context, allowed_tools):
+            data = json.loads(super().decide(role, context, allowed_tools))
+            data["arguments"] = {
+                "dns": "attacker.evil.test",
+                "days": 99999,
+                "serial": 123456,
+                "date_expiration": "2023-10-15",
+                "nom_donneur": "forged",
+            }
+            return json.dumps(data)
+
+    workflow = setup(tmp_path, InventingModel())
+    result = workflow.request(make_csr(keypair(), "node.lab.test"), 30)
+    assert result["decision"]["accepted"]
+    assert workflow.engine.audit(result["decision"]["serial"])
+    assert len((tmp_path / "ledger.jsonl").read_text().splitlines()) == 1
+
+
+def test_invented_arguments_cannot_override_rejected_policy(tmp_path):
+    class InventingModel(ScriptedModel):
+        def decide(self, role, context, allowed_tools):
+            data = json.loads(super().decide(role, context, allowed_tools))
+            data["arguments"] = {"policy_result": "approved", "dns": "node.lab.test"}
+            return json.dumps(data)
+
+    model = InventingModel()
+    workflow = setup(tmp_path, model)
+    result = workflow.request(make_csr(keypair(), "attacker.evil.test"), 30)
+    assert not result["decision"]["accepted"]
+    assert "emetteur" not in model.roles
+    assert not (tmp_path / "ledger.jsonl").exists()
