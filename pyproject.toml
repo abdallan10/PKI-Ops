@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "pkiops-lab"
+version = "0.1.0"
+description = "Local educational PKI with policy-gated issuance and audit"
+requires-python = ">=3.11"
+dependencies = ["cryptography>=42,<47", "PyYAML>=6,<7"]
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "pytest-cov>=5,<8"]
+[project.scripts]
+pkiops = "pkiops.cli:main"
+[tool.setuptools.packages.find]
+include = ["pkiops*"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
