@@ -34,7 +34,8 @@ class AgenticPKIWorkflow:
             return decision.tool == required
         loop = AgenticLoop(self.model, ToolRegistry({required: trusted_tool}),
                            verifier=verify,
-                           max_attempts=self.max_attempts, trace_path=self.trace_path)
+                           max_attempts=self.max_attempts, trace_path=self.trace_path,
+                           allowed_tools=(required,))
         return loop.run(role, metadata)
 
     def request(self, csr, days):
@@ -51,8 +52,15 @@ class AgenticPKIWorkflow:
             steps.append(self._step("guichet", metadata, {
                 "parser_demande": lambda: {"dns": dns, "days": days},
             }, "parser_demande"))
+            # Reading the CSR is a separate, read-only controller stage.
+            # The model cannot alter the CSR object or its parsed fields.
+            steps.append(self._step("controleur", {
+                **metadata, "action": "read_csr",
+            }, {"lire_csr": lambda: {"dns": dns, "days": days}},
+                "lire_csr"))
             valid, reason = validate_csr(csr, days, self.engine.policy)
             steps.append(self._step("controleur", {
+                **metadata, "action": "check_policy",
                 **metadata, "policy_result": "approved" if valid else "rejected",
                 "reason": reason,
             }, {"verifier_politique": lambda: {"valid": valid, "reason": reason}},
