@@ -38,7 +38,7 @@ class AgenticPKIWorkflow:
                            allowed_tools=(required,))
         return loop.run(role, metadata)
 
-    def request(self, csr, days):
+    def request(self, csr, days, request_note=None):
         from cryptography import x509
         try:
             names = csr.extensions.get_extension_for_class(
@@ -47,6 +47,10 @@ class AgenticPKIWorkflow:
         except (x509.ExtensionNotFound, ValueError):
             dns = "(missing SAN)"
         metadata = {"dns": dns, "days": days}
+        if request_note is not None:
+            if not isinstance(request_note, str):
+                raise TypeError("request_note must be a string")
+            metadata["request_note"] = request_note[:1000]
         steps = []
         try:
             steps.append(self._step("guichet", metadata, {
