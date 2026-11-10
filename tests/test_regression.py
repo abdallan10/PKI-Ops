@@ -46,4 +46,4 @@ def test_no_unencrypted_private_key_written(tmp_path):
     data = (tmp_path / 'lab' / 'root.key').read_bytes()
     assert b'ENCRYPTED PRIVATE KEY' in data
     assert b'BEGIN RSA PRIVATE KEY' not in data
-    assert (tmp_path / 'lab' / 'root.key').stat().st_mode & 0o077 == 0
+    # POSIX mode bits do not represent Windows ACLs. Check POSIX permissions only.\n    if os.name == 'posix':\n        assert (tmp_path / 'lab' / 'root.key').stat().st_mode & 0o077 == 0
