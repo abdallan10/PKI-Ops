@@ -11,6 +11,7 @@ from cryptography import x509
 
 from .core import validate_csr
 from .llm import OllamaAdvisor
+from .guard import check_advice
 
 
 class AdvisoryWorkflow:
@@ -30,6 +31,10 @@ class AdvisoryWorkflow:
             if not isinstance(advice, str):
                 raise ValueError("Missing advisory text")
             record = {"role": role, "status": "ok", "advice": advice, "authoritative": False}
+            if role == "controleur" and data.get("policy_result") in {"approved", "rejected"}:
+                record["consistency"] = check_advice(advice, data["policy_result"])
+                if record["consistency"]["flagged"]:
+                    record["status"] = "flagged"
         except Exception as exc:
             # No secrets or full exception text are written to the trace.
             record = {"role": role, "status": "unavailable",
