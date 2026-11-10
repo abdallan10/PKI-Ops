@@ -101,7 +101,24 @@ def verify_chain(leaf,inter,root,revoked=()):
         if not inter.extensions.get_extension_for_class(x509.BasicConstraints).value.ca: return False
         if not root.extensions.get_extension_for_class(x509.BasicConstraints).value.ca: return False
         names=leaf.extensions.get_extension_for_class(x509.SubjectAlternativeName).value.get_values_for_type(x509.DNSName)
-        if not names or any(not n.lower().endswith('.lab.test') for n in names): return False
+        # Enforce the CA's signed X.509 Name Constraints, not a hard-coded
+        # application policy. This remains effective if an issuer is bypassed.
+        constraints = inter.extensions.get_extension_for_class(x509.NameConstraints).value
+        if not names: return False
+        permitted = [n.value.lower() for n in (constraints.permitted_subtrees or [])
+                     if isinstance(n, x509.DNSName)]
+        excluded = [n.value.lower() for n in (constraints.excluded_subtrees or [])
+                    if isinstance(n, x509.DNSName)]
+        if not permitted: return False  # fail closed for this DNS-only laboratory
+        def within(name, subtree):
+            name = name.lower().rstrip('.')
+            subtree = subtree.rstrip('.')
+            if subtree.startswith('.'):
+                return name.endswith(subtree) and name != subtree[1:]
+            return name == subtree or name.endswith('.' + subtree)
+        if any(not any(within(n, p) for p in permitted) or
+               any(within(n, e) for e in excluded) for n in names):
+            return False
         return True
     except Exception: return False
 
