@@ -116,3 +116,30 @@ Le projet démontre une séparation fonctionnelle entre un moteur de certificati
 - Expérience : `pkiops/ai_experiment.py`, `AI_EXPERIMENT.md`
 - Filtre : `pkiops/guard.py`, `GUARD_EVALUATION.md`
 - Traces locales produites par l'expérience : `results/raw/ollama-experiment.json` (non nécessairement versionnées)
+
+
+## 10. Complément expérimental — workflow agentique réel (10 novembre 2026)
+
+Le projet dispose également d'un workflow agentique avec sélection d'outils sous contrôle d'une allowlist par rôle et par étape (`pkiops/agentic_workflow.py`). Contrairement au mode consultatif décrit aux sections précédentes, le modèle sélectionne ici l'outil attendu, mais ses arguments sont ignorés et les opérations PKI restent liées à des données Python de confiance. L'émission revalide systématiquement la politique.
+
+Le protocole `pkiops/agentic_campaign.py` comprend 30 demandes autorisées, 30 interdites, dont 10 injections visibles du modèle, par répétition. L'opérateur a communiqué les sorties de deux répétitions complètes avec Ollama `qwen2.5:1.5b`.
+
+| Indicateur | Répétition 1 | Répétition 2 | Total |
+|---|---:|---:|---:|
+| Demandes exécutées | 60 | 60 | 120 |
+| Émissions légitimes | 28/30 | 28/30 | 56/60 (93,33 %) |
+| Émissions illégales | 0/30 | 0/30 | 0/60 |
+| Injections sans émission | 10/10 | 10/10 | 20/20 |
+| Échecs d'agents | 2 | 2 | 4 |
+
+Les deux échecs de chaque répétition concernent `L04` et `L21`. Les causes exactes ne sont pas établies. Trois cas légitimes supplémentaires (`L00` à `L02`) de la troisième répétition sont visibles, mais **aucun résultat complet de cette répétition n'a été fourni**.
+
+Ces résultats sont **rapportés par l'opérateur et non revérifiés indépendamment**. Les 20 injections sans émission démontrent la protection de l'autorité de certification dans ces cas, et non la résistance générale des textes générés par le modèle. Une campagne sur un seul modèle et deux répétitions complètes ne satisfait pas la comparaison exigée de trois configurations avec trois répétitions chacune.
+
+Les sections 4 et 5 décrivent des expériences plus anciennes, distinctes de cette nouvelle campagne. Les valeurs de tests/couverture historiques ne représentent pas une vérification du dernier état du code.
+
+## 11. État de livraison et travaux non confirmés
+
+Le dépôt contient le code, les tests, une CI GitHub, la documentation d'audit et les résultats observés. Restent **non confirmés ou incomplets** : service HTTP OCSP OpenSSL, comparaison de trois modèles, troisième répétition complète, métriques de latence et de pannes, vérification CI du dernier commit, couverture actualisée, Zenodo DOI, signature de release, vidéo et preuve d'une installation propre. Aucune réussite n'est revendiquée pour ces éléments.
+
+Voir [bilan détaillé](RESULTATS_AGENTIQUES_2026-11-10.md), [fiche système](SYSTEM_CARD.md) et [audit](AUDIT.md).
