@@ -1,0 +1,4 @@
+allowed_dns_suffix: .lab.test
+max_days: 90
+min_rsa_bits: 2048
+allowed_algorithms: [RSA, EC]
