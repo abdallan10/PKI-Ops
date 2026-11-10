@@ -1,5 +1,6 @@
 """OCSP lab tests: good, revoked, wrong issuer, wrong certificate and expiry."""
 from datetime import datetime, timedelta, timezone
+import pytest
 
 from pkiops.core import create_root, create_intermediate, issue, keypair, make_csr
 from pkiops.ocsp import make_response, verify_response
@@ -38,5 +39,5 @@ def test_ocsp_wrong_issuer_and_forged_signer():
     other_issuer, _, _ = chain()
     response = make_response(cert, issuer, key)
     assert not verify_response(response, cert, other_issuer)
-    forged = make_response(cert, issuer, keypair())
-    assert not verify_response(forged, cert, issuer)
+    with pytest.raises(ValueError, match='do not match'):
+        make_response(cert, issuer, keypair())
