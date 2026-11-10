@@ -20,5 +20,16 @@ L'URL par défaut est `http://127.0.0.1:11434`; la variable `PKIOPS_OLLAMA_URL` 
 
 - Les entrées du modèle sont filtrées sur une liste de métadonnées publiques.
 - Les sorties sont du texte non fiable, jamais des autorisations.
-- Aucun test de robustesse d'un LLM face aux injections n'est encore validé.
+- Une expérience exploratoire réelle de trois scénarios a été exécutée sur qwen2.5:1.5b : voir `AI_EXPERIMENT.md` et `RAPPORT_FINAL.md`. Elle ne prouve pas une robustesse générale aux injections.
+- Un filtre heuristique de cohérence signale certaines contradictions explicites ; voir `GUARD_EVALUATION.md`.
 - La campagne `make reproduce` reste une baseline déterministe.
+
+## Workflow multi-rôles et expérience reproductible
+
+Le workflow `pkiops.workflow.AdvisoryWorkflow` consulte les rôles IA, mais seul `Orchestrator` signe et révoque. Pour tester la vraie injection :
+
+```powershell
+.\.venv\Scripts\python.exe -m pkiops.ai_experiment
+```
+
+Le rapport `results/raw/ollama-experiment.json` contient les avis et la décision PKI ; le fichier est régénéré à chaque exécution. Les réponses IA peuvent contenir des affirmations erronées. Le détecteur ne garantit pas leur exactitude.
