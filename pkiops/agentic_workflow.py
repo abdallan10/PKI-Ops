@@ -1,13 +1,13 @@
 """Opt-in five-role tool-selection workflow with deterministic PKI authority.
 
-The model selects a tool for each role, but never supplies executable
-arguments. Python binds trusted request data to closed, role-specific tools.
+The model selects a tool for each role. Model-supplied arguments are ignored
+and never reach executable PKI operations. Python binds trusted request data to closed, role-specific tools.
 The controller and issuer must complete before any certificate is issued.
 """
 from __future__ import annotations
 
 from .agentic import AgenticLoop, AgentDecisionError, ToolRegistry
-from .core import validate_csr, verify_chain
+from .core import validate_csr
 
 
 class AgenticPKIWorkflow:
@@ -21,11 +21,19 @@ class AgenticPKIWorkflow:
         self.max_attempts = max_attempts
 
     def _step(self, role, metadata, tools, required):
-        # The model may only return an empty argument object. This prevents
-        # untrusted JSON from choosing a serial, CSR, duration or policy.
+        # Model arguments are untrusted hints, never execution parameters.
+        # Bind every operation to trusted Python closures; only the expected
+        # tool is registered, so an unauthorized choice cannot execute.
+        if set(tools) != {required}:
+            raise ValueError("exactly the required tool must be registered")
+
+        def trusted_tool(**_untrusted_arguments):
+            return tools[required]()
+
         def verify(decision, _result):
-            return decision.tool == required and decision.arguments == {}
-        loop = AgenticLoop(self.model, ToolRegistry(tools), verifier=verify,
+            return decision.tool == required
+        loop = AgenticLoop(self.model, ToolRegistry({required: trusted_tool}),
+                           verifier=verify,
                            max_attempts=self.max_attempts, trace_path=self.trace_path)
         return loop.run(role, metadata)
 
