@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.x509 import ocsp
 
 
@@ -52,7 +53,7 @@ def verify_response(response: ocsp.OCSPResponse, cert: x509.Certificate,
         issuer.public_key().verify(
             response.signature,
             response.tbs_response_bytes,
-            response.signature_algorithm_parameters,
+            padding.PKCS1v15(),
             response.signature_hash_algorithm,
         )
     except Exception:
